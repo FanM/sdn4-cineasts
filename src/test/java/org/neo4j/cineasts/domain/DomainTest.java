@@ -26,10 +26,10 @@ import org.neo4j.cineasts.repository.ActorRepository;
 import org.neo4j.cineasts.repository.DirectorRepository;
 import org.neo4j.cineasts.repository.MovieRepository;
 import org.neo4j.cineasts.repository.UserRepository;
-import org.neo4j.helpers.collection.IteratorUtil;
 import org.neo4j.ogm.cypher.Filter;
 import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -332,7 +332,7 @@ public class DomainTest {
         session.save(actor);
 
         session.clear();
-        Movie dieHard = IteratorUtil.firstOrNull(findMovieByProperty("title","Die Hard"));
+        Movie dieHard = IterableUtils.getFirstOrNull(findMovieByProperty("title","Die Hard"));
         assertNotNull(dieHard);
         assertEquals(1,dieHard.getRoles().size());
     }

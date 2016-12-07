@@ -21,12 +21,12 @@ import org.neo4j.cineasts.repository.ActorRepository;
 import org.neo4j.cineasts.repository.MovieRepository;
 import org.neo4j.cineasts.repository.UserRepository;
 import org.neo4j.cineasts.service.DatabasePopulator;
-import org.neo4j.helpers.collection.IteratorUtil;
 import org.neo4j.ogm.cypher.Filter;
 import org.neo4j.ogm.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,14 +60,14 @@ public class MovieController {
     public
     @ResponseBody
     Movie getMovie(@PathVariable String id) {
-        return IteratorUtil.firstOrNull(findMovieByProperty("id", id));
+        return IterableUtils.getFirstOrNull(findMovieByProperty("id", id));
     }
 
 
     @RequestMapping(value = "/movies/{movieId}", method = RequestMethod.GET, headers = "Accept=text/html")
     public String singleMovieView(final Model model, @PathVariable String movieId) {
         User user = addUser(model);
-        Movie movie = IteratorUtil.firstOrNull(findMovieByProperty("id", movieId));
+        Movie movie = IterableUtils.getFirstOrNull(findMovieByProperty("id", movieId));
         model.addAttribute("id", movieId);
         if (movie != null) {
             model.addAttribute("movie", movie);
@@ -95,7 +95,7 @@ public class MovieController {
 
     @RequestMapping(value = "/movies/{movieId}", method = RequestMethod.POST, headers = "Accept=text/html")
     public String updateMovie(Model model, @PathVariable String movieId, @RequestParam(value = "rated", required = false) Integer stars, @RequestParam(value = "comment", required = false) String comment) {
-        Movie movie = IteratorUtil.firstOrNull(findMovieByProperty("id", movieId));
+        Movie movie = IterableUtils.getFirstOrNull(findMovieByProperty("id", movieId));
         User user = userRepository.getUserFromSession();
         if (user != null && movie != null) {
             int stars1 = stars == null ? -1 : stars;
@@ -117,7 +117,7 @@ public class MovieController {
         if (query != null && !query.isEmpty()) {
             //Page<Movie> movies = movieRepository.findByTitleLike(query, new PageRequest(0, 20));
             Iterable<Movie> movies = movieRepository.findByTitleLike("(?i).*" + query + ".*");
-            model.addAttribute("movies", IteratorUtil.asCollection(movies));
+            model.addAttribute("movies", movies);
         } else {
             model.addAttribute("movies", Collections.emptyList());
         }
@@ -128,10 +128,10 @@ public class MovieController {
 
     @RequestMapping(value = "/actors/{id}", method = RequestMethod.GET, headers = "Accept=text/html")
     public String singleActorView(Model model, @PathVariable String id) {
-        Actor actor = IteratorUtil.firstOrNull(findActorByProperty("id", id));
+        Actor actor = IterableUtils.getFirstOrNull(findActorByProperty("id", id));
         model.addAttribute("actor", actor);
         model.addAttribute("id", id);
-        model.addAttribute("roles", IteratorUtil.asCollection(actor.getRoles()));
+        model.addAttribute("roles", actor.getRoles());
         addUser(model);
         return "/actors/show";
     }

@@ -12,10 +12,10 @@ package org.neo4j.cineasts.repository;
 
 import org.neo4j.cineasts.domain.User;
 import org.neo4j.cineasts.service.CineastsUserDetails;
-import org.neo4j.helpers.collection.IteratorUtil;
 import org.neo4j.ogm.cypher.Filter;
 import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.util.IterableUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -46,7 +46,7 @@ public class
     }
 
     private User findByLogin(String login) {
-        return IteratorUtil.firstOrNull(findByProperty("login", login).iterator());
+        return IterableUtils.getFirstOrNull(findByProperty("login", login).iterator());
     }
 
     @Override

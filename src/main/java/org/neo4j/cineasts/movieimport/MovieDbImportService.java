@@ -29,6 +29,7 @@ import org.neo4j.ogm.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.neo4j.repository.GraphRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,9 +48,9 @@ public class MovieDbImportService {
 	@Autowired
 	private PersonRepository personRepository;
 	@Autowired
+	private MovieDbApiClient client;
+	@Autowired
 	private Session session;
-
-	private MovieDbApiClient client = new MovieDbApiClient("70c7465a780b1d65c0f3d5bd394c5b80");
 
 	private String baseImageUrl;
 
@@ -113,57 +114,57 @@ public class MovieDbImportService {
 		return data;
 	}
 
-	private void relatePersonsToMovie(Movie movie, Map data) {
-		//Relate Crew
-		@SuppressWarnings("unchecked") Collection<Map> crew = (Collection<Map>) data.get("crew");
-		for (Map entry : crew) {
-			String id = "" + entry.get("id");
-			String jobName = (String) entry.get("job");
-			Roles job = movieDbJsonMapper.mapToRole(jobName);
-			if (job == null) {
-				if (logger.isInfoEnabled()) {
-					logger.info("Could not add person with job " + jobName + " " + entry);
-				}
-				continue;
-			}
-			if (Roles.DIRECTED.equals(job)) {
-				Director director = null;
-				director = doImportDirector(id, new Director(id));
-				if (director == null) {
-					logger.debug("Person " + id + " and job " + jobName + " already exists as an actor");
-				}
-				if (director != null && !director.getDirectedMovies().contains(movie)) {
-					director.directed(movie);
-					try {
-						directorRepository.save(director, 1);
-					} catch (Exception e) {
-						throw e;
-					}
-				}
-				//movieRepository.save(movie);
+    private void relatePersonsToMovie(Movie movie, Map data) {
+        //Relate Crew
+        @SuppressWarnings("unchecked") Collection<Map> crew = (Collection<Map>) data.get("crew");
+        for (Map entry : crew) {
+            String id = "" + entry.get("id");
+            String jobName = (String) entry.get("job");
+            Roles job = movieDbJsonMapper.mapToRole(jobName);
+            if (job == null) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Could not add person with job " + jobName + " " + entry);
+                }
+                continue;
+            }
+            if (Roles.DIRECTED.equals(job)) {
+                Director director = null;
+                director = doImportDirector(id, new Director(id));
+                if (director == null) {
+                    logger.debug("Person " + id + " and job " + jobName + " already exists as an actor");
+                }
+                if (director != null && !director.getDirectedMovies().contains(movie)) {
+                    director.directed(movie);
+                    try {
+                        directorRepository.save(director, 1);
+                    } catch (Exception e) {
+                        throw e;
+                    }
+                }
+                //movieRepository.save(movie);
 
-			}
-		}
+            }
+        }
 
-		//Relate Cast
-		@SuppressWarnings("unchecked") Collection<Map> cast = (Collection<Map>) data.get("cast");
-		for (Map entry : cast) {
-			String id = "" + entry.get("id");
-			final Actor actor = doImportActor(id, new Actor(id));
-			if (actor == null) {
-				logger.debug("Person " + id + " and job Actor already exists as an actor");
-			}
-			if (actor!=null && !actor.getRoles().contains(new Role(actor, movie, (String) entry.get("character")))) {
-				actor.playedIn(movie, (String) entry.get("character"));
-				try {
-					actorRepository.save(actor);
-				} catch (Exception e) {
-					logger.debug("Person id " + id + " and name " + actor.getName() + " couldnt be saved");
-					throw e;
-				}
-			}
-		}
-	}
+        //Relate Cast
+        @SuppressWarnings("unchecked") Collection<Map> cast = (Collection<Map>) data.get("cast");
+        for (Map entry : cast) {
+            String id = "" + entry.get("id");
+            final Actor actor = doImportActor(id, new Actor(id));
+            if (actor == null) {
+                logger.debug("Person " + id + " and job Actor already exists as an actor");
+            }
+            if (actor!=null && !actor.getRoles().contains(new Role(actor, movie, (String) entry.get("character")))) {
+                actor.playedIn(movie, (String) entry.get("character"));
+                try {
+                    actorRepository.save(actor);
+                } catch (Exception e) {
+                    logger.debug("Person id " + id + " and name " + actor.getName() + " couldnt be saved");
+                    throw e;
+                }
+            }
+        }
+    }
 
 	/*@Transactional
 	public <T extends Person> T importPerson(String personId, T person) {
@@ -184,40 +185,39 @@ public class MovieDbImportService {
         return personRepository.save(newPerson);
     }*/
 
-	private Actor doImportActor(String personId, Actor newPerson) {
-		logger.debug("Importing actor " + personId);
-		Actor actor = (actorRepository.findById(personId));
-		if (actor != null) {
-			return actor;
-		}
-		//Check if the person is a director
-		if (directorRepository.findById(personId) != null) {
-			return null;
-		}
-		Map data = loadPersonData(personId);
-		if (data.containsKey("not_found")) {
-			throw new RuntimeException("Data for Person " + personId + " not found.");
-		}
-		movieDbJsonMapper.mapToPerson(data, newPerson, baseImageUrl);
-		return actorRepository.save(newPerson);
-	}
+    private Actor doImportActor(String personId, Actor newPerson) {
+        logger.debug("Importing actor " + personId);
+        Actor actor = (actorRepository.findById(personId));
+        if (actor != null) {
+            return actor;
+        }
+        //Check if the person is a director
+        if (directorRepository.findById(personId) != null) {
+            return null;
+        }
+        return savePersonData(personId, newPerson, actorRepository);
+    }
 
-	private Director doImportDirector(String personId, Director newPerson) {
-		logger.debug("Importing director " + personId);
-		Director director = directorRepository.findById(personId);
-		if (director != null) {
-			return director;
-		}
-		if (actorRepository.findById(personId) != null) {
-			return null;
-		}
-		Map data = loadPersonData(personId);
-		if (data.containsKey("not_found")) {
-			throw new RuntimeException("Data for Person " + personId + " not found.");
-		}
-		movieDbJsonMapper.mapToPerson(data, newPerson, baseImageUrl);
-		return directorRepository.save(newPerson);
-	}
+    private Director doImportDirector(String personId, Director newPerson) {
+        logger.debug("Importing director " + personId);
+        Director director = directorRepository.findById(personId);
+        if (director != null) {
+            return director;
+        }
+        if (actorRepository.findById(personId) != null) {
+            return null;
+        }
+        return savePersonData(personId, newPerson, directorRepository);
+    }
+
+    private <T extends Person> T savePersonData(String personId, T newPerson, GraphRepository<T> repository) {
+        Map data = loadPersonData(personId);
+        if (data.containsKey("not_found")) {
+            throw new RuntimeException("Data for Person " + personId + " not found.");
+        }
+        movieDbJsonMapper.mapToPerson(data, newPerson, baseImageUrl);
+        return repository.save(newPerson);
+    }
 
 	private Map loadPersonData(String personId) {
 		if (localStorage.hasPerson(personId)) {

@@ -107,6 +107,21 @@
             <h2>Overview</h2>
             <p>${movie.description}</p>
 
+            <h2>Crew</h2>
+                <c:if test="${not empty movie.directors}">
+                  <ul class="actors-list">
+                    <c:forEach items="${movie.directors}" var="director">
+                        <li>
+                            <c:set var="image" value="${director.profileImageUrl}"/>
+                            <c:if test="${empty image}"><c:set var="image" value="/images/profile-placeholder-small.png"/></c:if>
+                            <a class="actor-image" href="<c:url value="/directors/${director.id}" />"><img alt="${director.name}" src="<c:url value="${image}" />" /></a>
+                            <a href="<c:url value="/directors/${director.id}" />"><c:out value="${director.name}" /> </a>
+                        </li>
+                    </c:forEach>
+                  </ul>
+                  <div class="break"></div>
+                </c:if>
+
             <h2>Cast</h2>
             <c:if test="${not empty movie.roles}">
               <ul class="actors-list">

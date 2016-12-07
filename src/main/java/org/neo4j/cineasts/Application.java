@@ -10,6 +10,7 @@
  */
 package org.neo4j.cineasts;
 
+import org.neo4j.cineasts.movieimport.MovieDbApiClient;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;
 import org.springframework.context.annotation.Bean;
@@ -27,18 +28,19 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @ComponentScan("org.neo4j.cineasts")
 public class Application extends Neo4jConfiguration {
 
-    public static final int NEO4J_PORT = 7474;
-
-    @Override
+    @Bean
     public SessionFactory getSessionFactory() {
         return new SessionFactory("org.neo4j.cineasts.domain");
     }
 
-
-    @Override
     @Bean
     @Scope(value = "session", proxyMode = ScopedProxyMode.TARGET_CLASS)
     public Session getSession() throws Exception {
         return super.getSession();
+    }
+
+    @Bean
+    public MovieDbApiClient getMovieDbApiClient() {
+        return new MovieDbApiClient("926d2a79e82920b62f03b1cb57e532e6");
     }
 }
