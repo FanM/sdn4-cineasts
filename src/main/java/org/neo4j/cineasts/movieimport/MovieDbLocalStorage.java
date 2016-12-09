@@ -50,6 +50,29 @@ public class MovieDbLocalStorage {
         return loadJsonValue(storageFile);
     }
 
+    public void storeMovie(String movieId, Object movieData) {
+        File storageFile = fileForMovie(movieId);
+        storeJsonValue(movieData, storageFile);
+    }
+
+    public boolean hasTV(String tvId) {
+        return fileForTV(tvId).exists();
+    }
+
+    private File fileForTV(String tvId) {
+        return new File(storagePath, String.format("tv_%s.json", tvId));
+    }
+
+    public Map loadTV(String tvId) {
+        File storageFile = fileForTV(tvId);
+        return loadJsonValue(storageFile);
+    }
+
+    public void storeTV(String tvId, Object tvData) {
+        File storageFile = fileForTV(tvId);
+        storeJsonValue(tvData, storageFile);
+    }
+
     private Map loadJsonValue(File storageFile) {
         try {
             final Object value = mapper.readValue(storageFile, Object.class);
@@ -74,10 +97,6 @@ public class MovieDbLocalStorage {
         throw new MovieDbException("Wrong movie data format, expected Map/JSON-Object but was " + typeInformation);
     }
 
-    public void storeMovie(String movieId, Object movieData) {
-        File storageFile = fileForMovie(movieId);
-        storeJsonValue(movieData, storageFile);
-    }
 
     private void storeJsonValue(Object jsonData, File storageFile) {
         try {

@@ -24,16 +24,16 @@ public class Rating {
     @StartNode
     private User user;
     @EndNode
-    private Movie movie;
+    private Item item;
     private int stars;
     private String comment;
 
     public Rating() {
     }
 
-    public Rating(User user, Movie movie, int stars, String comment) {
+    public Rating(User user, Item item, int stars, String comment) {
         this.user = user;
-        this.movie = movie;
+        this.item = item;
         this.stars = stars;
         this.comment = comment;
     }
@@ -46,12 +46,12 @@ public class Rating {
         this.user = user;
     }
 
-    public Movie getMovie() {
-        return movie;
+    public Item getItem() {
+        return item;
     }
 
-    public void setMovie(Movie movie) {
-        this.movie = movie;
+    public void setItem(Item item) {
+        this.item = item;
     }
 
     public int getStars() {
@@ -87,7 +87,7 @@ public class Rating {
         if (comment != null ? !comment.equals(rating.comment) : rating.comment != null) {
             return false;
         }
-        if (movie != null ? !movie.equals(rating.movie) : rating.movie != null) {
+        if (item != null ? !item.equals(rating.item) : rating.item != null) {
             return false;
         }
         if (user != null ? !user.equals(rating.user) : rating.user != null) {
@@ -100,7 +100,7 @@ public class Rating {
     @Override
     public int hashCode() {
         int result = user != null ? user.hashCode() : 0;
-        result = 31 * result + (movie != null ? movie.hashCode() : 0);
+        result = 31 * result + (item != null ? item.hashCode() : 0);
         result = 31 * result + stars;
         result = 31 * result + (comment != null ? comment.hashCode() : 0);
         return result;

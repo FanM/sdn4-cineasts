@@ -26,7 +26,7 @@ public class Role {
     @GraphId
     Long id;
     @EndNode
-    Movie movie;
+    Item movie;
     @StartNode
     Actor actor;
 
@@ -35,7 +35,7 @@ public class Role {
     public Role() {
     }
 
-    public Role(Actor actor, Movie movie, String roleName) {
+    public Role(Actor actor, Item movie, String roleName) {
         this.movie = movie;
         this.actor = actor;
         this.name = roleName;
@@ -49,7 +49,7 @@ public class Role {
         this.name = name;
     }
 
-    public Movie getMovie() {
+    public Item getMovie() {
         return movie;
     }
 

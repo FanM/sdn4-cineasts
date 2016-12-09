@@ -14,16 +14,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.neo4j.cineasts.domain.Actor;
-import org.neo4j.cineasts.domain.Director;
-import org.neo4j.cineasts.domain.Movie;
-import org.neo4j.cineasts.domain.Person;
-import org.neo4j.cineasts.domain.Role;
-import org.neo4j.cineasts.domain.Roles;
-import org.neo4j.cineasts.repository.ActorRepository;
-import org.neo4j.cineasts.repository.DirectorRepository;
-import org.neo4j.cineasts.repository.MovieRepository;
-import org.neo4j.cineasts.repository.PersonRepository;
+import org.neo4j.cineasts.domain.*;
+import org.neo4j.cineasts.repository.*;
 import org.neo4j.ogm.cypher.Filter;
 import org.neo4j.ogm.session.Session;
 import org.slf4j.Logger;
@@ -37,8 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class MovieDbImportService {
 
 	private static final Logger logger = LoggerFactory.getLogger(MovieDbImportService.class);
-	MovieDbJsonMapper movieDbJsonMapper = new MovieDbJsonMapper();
 
+    @Autowired
+    private TVRepository tvRepository;
 	@Autowired
 	private MovieRepository movieRepository;
 	@Autowired
@@ -57,36 +50,60 @@ public class MovieDbImportService {
 	private MovieDbLocalStorage localStorage = new MovieDbLocalStorage("data/json");
 
 	public void importImageConfig() {
-		Map data = client.getImageConfig();
-		baseImageUrl = ((Map) data.get("images")).get("base_url") + "w185";
+        if (baseImageUrl == null) {
+            Map data = client.getImageConfig();
+            baseImageUrl = ((Map) data.get("images")).get("base_url") + "w185";
+        }
 	}
+
+    @Transactional
+    public Map<Integer, String> importMovies(Map<Integer, Integer> ranges) {
+        importImageConfig();
+        return importItems(ranges, Movie.class);
+    }
 
 	@Transactional
-	public Map<Integer, String> importMovies(Map<Integer, Integer> ranges) {
-		final Map<Integer, String> movies = new LinkedHashMap<Integer, String>();
-		for (Map.Entry<Integer, Integer> entry : ranges.entrySet()) {
-			for (int id = entry.getKey(); id <= entry.getValue(); id++) {
-				String result = importMovieFailsafe(id);
-				movies.put(id, result);
-			}
-		}
-		return movies;
+	public Map<Integer, String> importTVs(Map<Integer, Integer> ranges) {
+        importImageConfig();
+        return importItems(ranges, TV.class);
 	}
 
-	private String importMovieFailsafe(Integer id) {
+    private Map<Integer, String> importItems(Map<Integer, Integer> ranges, Class clazz) {
+        final Map<Integer, String> items = new LinkedHashMap<>();
+        for (Map.Entry<Integer, Integer> entry : ranges.entrySet()) {
+            for (int id = entry.getKey(); id <= entry.getValue(); id++) {
+                String result = importItemFailsafe(id, clazz);
+                items.put(id, result);
+            }
+        }
+        return items;
+    }
+
+	private String importItemFailsafe(Integer id, Class clazz) {
 		try {
-			Movie movie = doImportMovie(String.valueOf(id));
-			return movie.getTitle();
+            Item item;
+            if (clazz == Movie.class) {
+                item = doImportMovie(String.valueOf(id));
+            } else if (clazz == TV.class) {
+                item = doImportTV(String.valueOf(id));
+            } else {
+                return "Invalid Class: " + clazz.getName();
+            }
+			return item.getTitle();
 		} catch (Exception e) {
 			return e.getMessage();
 		}
 	}
 
-	public Movie importMovie(String movieId) {
-		return doImportMovie(movieId);
+    public Item importMovie(String movieId) {
+        return doImportMovie(movieId);
+    }
+
+	public Item importTV(String tvId) {
+		return doImportTV(tvId);
 	}
 
-	private Movie doImportMovie(String movieId) {
+	private Item doImportMovie(String movieId) {
 		logger.debug("Importing movie " + movieId);
 
 		Movie movie = movieRepository.findById(movieId);
@@ -98,29 +115,59 @@ public class MovieDbImportService {
 		if (data.containsKey("not_found")) {
 			throw new RuntimeException("Data for Movie " + movieId + " not found.");
 		}
-		movieDbJsonMapper.mapToMovie(data, movie, baseImageUrl);
+		MovieDbJsonMapper.mapToMovie(data, movie, baseImageUrl);
 		movieRepository.save(movie);
-		relatePersonsToMovie(movie, (Map) data.get("credits"));
+		relatePersonsToItem(movie, (Map) data.get("credits"), null);
 		return movie;
 	}
 
-	private Map loadMovieData(String movieId) {
-		if (localStorage.hasMovie(movieId)) {
-			return localStorage.loadMovie(movieId);
+    private Item doImportTV(String tvId) {
+        logger.debug("Importing TV " + tvId);
+
+        TV tv = tvRepository.findById(tvId);
+        if (tv == null) { // Not found: Create fresh
+            tv = new TV(tvId, null);
+        }
+
+        Map data = loadTVData(tvId);
+        if (data.containsKey("not_found")) {
+            throw new RuntimeException("Data for TV " + tvId + " not found.");
+        }
+        MovieDbJsonMapper.mapToTV(data, tv, baseImageUrl);
+        tvRepository.save(tv);
+        @SuppressWarnings("unchecked")
+        Collection<Map> creators = (Collection<Map>) data.get("created_by");
+        relatePersonsToItem(tv, (Map) data.get("credits"), creators);
+        return tv;
+    }
+
+    private Map loadMovieData(String movieId) {
+        if (localStorage.hasMovie(movieId)) {
+            return localStorage.loadMovie(movieId);
+        }
+
+        Map data = client.getMovie(movieId);
+        localStorage.storeMovie(movieId, data);
+        return data;
+    }
+
+	private Map loadTVData(String tvId) {
+		if (localStorage.hasTV(tvId)) {
+			return localStorage.loadTV(tvId);
 		}
 
-		Map data = client.getMovie(movieId);
-		localStorage.storeMovie(movieId, data);
+		Map data = client.getTV(tvId);
+		localStorage.storeTV(tvId, data);
 		return data;
 	}
 
-    private void relatePersonsToMovie(Movie movie, Map data) {
+    private void relatePersonsToItem(Item movie, Map data, Collection<Map> creators) {
         //Relate Crew
         @SuppressWarnings("unchecked") Collection<Map> crew = (Collection<Map>) data.get("crew");
         for (Map entry : crew) {
             String id = "" + entry.get("id");
             String jobName = (String) entry.get("job");
-            Roles job = movieDbJsonMapper.mapToRole(jobName);
+            Roles job = MovieDbJsonMapper.mapToRole(jobName);
             if (job == null) {
                 if (logger.isInfoEnabled()) {
                     logger.info("Could not add person with job " + jobName + " " + entry);
@@ -141,8 +188,22 @@ public class MovieDbImportService {
                         throw e;
                     }
                 }
-                //movieRepository.save(movie);
+            }
+        }
 
+        //Relate Creators
+        if (creators != null) {
+            for (Map entry : creators) {
+                String id = "" + entry.get("id");
+                final Director director = doImportDirector(id, new Director(id));
+                if (director != null && !director.getDirectedMovies().contains(movie)) {
+                    director.directed(movie);
+                    try {
+                        directorRepository.save(director, 1);
+                    } catch (Exception e) {
+                        throw e;
+                    }
+                }
             }
         }
 
@@ -215,7 +276,7 @@ public class MovieDbImportService {
         if (data.containsKey("not_found")) {
             throw new RuntimeException("Data for Person " + personId + " not found.");
         }
-        movieDbJsonMapper.mapToPerson(data, newPerson, baseImageUrl);
+        MovieDbJsonMapper.mapToPerson(data, newPerson, baseImageUrl);
         return repository.save(newPerson);
     }
 

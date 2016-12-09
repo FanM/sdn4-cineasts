@@ -23,7 +23,7 @@ import org.neo4j.ogm.annotation.Relationship;
 public class Director extends Person {
 
     @Relationship(type = "DIRECTED")
-    private Set<Movie> directedMovies = new HashSet<Movie>();
+    private Set<Item> directedMovies = new HashSet<>();
 
     public Director(String id, String name) {
         super(id, name);
@@ -37,11 +37,11 @@ public class Director extends Person {
         super(id, null);
     }
 
-    public Set<Movie> getDirectedMovies() {
+    public Set<Item> getDirectedMovies() {
         return directedMovies;
     }
 
-    public void directed(Movie movie) {
+    public void directed(Item movie) {
         directedMovies.add(movie);
         movie.addDirector(this);
     }

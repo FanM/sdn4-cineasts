@@ -5,70 +5,68 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <html>
-<head><title>${movie.title}</title></head>
+<head><title>${tv.title}</title></head>
 <body>
 <c:choose>
-    <c:when test="${not empty movie}">
+    <c:when test="${not empty tv}">
       <div class="span-5">
         <div class="profile-header">
-                <%--@elvariable id="movie" type="org.neo4j.cineasts.domain.Movie"--%>
-          <c:set var="image" value="${movie.imageUrl}"/>
+                <%--@elvariable id="tv" type="org.neo4j.cineasts.domain.Movie"--%>
+          <c:set var="image" value="${tv.imageUrl}"/>
           <c:if test="${empty image}"><c:set var="image" value="/images/movie-placeholder.png"/></c:if>
           <div class="profile-image"><img src="<c:url value="${image}"/>"/></div>
           <div class="profile-header-details">          
-            <h2>${movie.title} (${movie.year}) <img src="/images/rated_${stars}.png" alt="${stars} stars"/></h2>
+            <h2>${tv.title} (${tv.year}) <img src="/images/rated_${stars}.png" alt="${stars} stars"/></h2>
           </div>
-          <h3><${movie.tagline}</h3>
           <div class="break"></div>
         </div>
 
         <div class="span-half">
-          <h3>Movie facts</h3>
+          <h3>TV facts</h3>
 
           <table>
             <tr>
               <th>Language</th>
-              <td>${movie.language}</td>
+              <td>${tv.language}</td>
             </tr>
             <tr>
               <th>Runtime</th>
-              <td>${movie.runtime} Minutes</td>
+              <td>${tv.episodeRuntime} Minutes</td>
             </tr>
             <tr>
               <th>Genre</th>
-              <td>${movie.genre}</td>
+              <td>${tv.genre}</td>
             </tr>
             <tr>
               <th>Other sites</th>
-              <td><a target="cineasts_link" href="http://www.themoviedb.org/movie/${movie.id}">TheMovieDb.org</a> |
-                  <a target="cineasts_link" href="http://www.imdb.com/title/${movie.imdbId}">IMDb</a>
+              <td><a target="cineasts_link" href="http://www.themoviedb.org/tv/${tv.id}">TheMovieDb.org</a> |
               </td>
             </tr>
             <tr>
               <th>Buy DVDs & Books</th>
-              <td><a target="cineasts_link" href="http://www.amazon.com/s/?url=search-alias%3Daps&field-keywords=<c:url value="${movie.title}"/>">Amazon</a> |
-                  <a target="cineasts_link" href="http://www.cinebutler.com/search.html?searchBy=title&searchFor=<c:url value="${movie.title}"/>">CineButler</a>
+              <td><a target="cineasts_link" href="http://www.amazon.com/s/?url=search-alias%3Daps&field-keywords=<c:url value="${tv.title}"/>">Amazon</a> |
+                  <a target="cineasts_link" href="http://www.cinebutler.com/search.html?searchBy=title&searchFor=<c:url value="${tv.title}"/>">CineButler</a>
               </td>
             </tr>
             <tr>
               <th>In Cinemas</th>
-              <td><a target="cineasts_link" href="http://www.google.com/movies?q=<c:url value="${movie.title}"/>">Google Movies</a>
+              <td><a target="cineasts_link" href="http://www.google.com/movies?q=<c:url value="${tv.title}"/>">Google Movies</a>
               </td>
             </tr>
           </table>
         </div>
 
         <div class="span-half last">
-          <c:if test="${not empty movie.trailer}">
+          <c:if test="${not empty tv.trailer}">
           <h3>Trailers</h3>
-            <c:set var="youtube" value="movie.youtubeId"/>
+            <c:set var="youtube" value="tv.youtubeId"/>
             <c:choose>
                 <c:when test="${not empty youtube}">
-                    <iframe title="YouTube video player" width="200" height="143" src="http://www.youtube.com/embed/${movie.youtubeId}?rel=0&controls=0&egm=1&fs=1" frameborder="0" allowfullscreen></iframe>
+                    <iframe title="YouTube video player" width="200" height="143" src="http://www.youtube.com/embed/${tv.youtubeId}?rel=0&controls=0&egm=1&fs=1" frameborder="0" allowfullscreen></iframe>
                 </c:when>
                 <c:otherwise>
                     <ul>
-                      <li><a href="${movie.trailer}">Trailer</a></li>
+                      <li><a href="${tv.trailer}">Trailer</a></li>
                     </ul>
                 </c:otherwise>
             </c:choose>
@@ -82,18 +80,18 @@
             <li>
               <table>
                 <tr>
-                  <th>Released</th>
-                  <td><fmt:formatDate value="${movie.releaseDate}" pattern="yyyy/dd/MM"/></td>
+                  <th>First Aired</th>
+                  <td><fmt:formatDate value="${tv.firstAirDate}" pattern="yyyy/dd/MM"/></td>
                 </tr>
-                  <c:if test="${not empty movie.homepage}">
+                  <c:if test="${not empty tv.homepage}">
                   <tr>
                     <th></th>
-                    <td><a href="${movie.homepage}">Homepage</a></td>
+                    <td><a href="${tv.homepage}">Homepage</a></td>
                   </tr>
                   </c:if>
                   <tr>
                     <th>Studio</th>
-                    <td>${movie.studio}</td>
+                    <td>${tv.studio}</td>
                   </tr>
               </table>
             </li>
@@ -105,12 +103,12 @@
         <div class="movie-content-outer">
           <div class="movie-content">
             <h2>Overview</h2>
-            <p>${movie.description}</p>
+            <p>${tv.description}</p>
 
-            <h2>Directors</h2>
-                <c:if test="${not empty movie.directors}">
+            <h2>Creators</h2>
+                <c:if test="${not empty tv.directors}">
                   <ul class="actors-list">
-                    <c:forEach items="${movie.directors}" var="director">
+                    <c:forEach items="${tv.directors}" var="director">
                         <li>
                             <c:set var="image" value="${director.profileImageUrl}"/>
                             <c:if test="${empty image}"><c:set var="image" value="/images/profile-placeholder-small.png"/></c:if>
@@ -123,9 +121,9 @@
                 </c:if>
 
             <h2>Cast</h2>
-            <c:if test="${not empty movie.roles}">
+            <c:if test="${not empty tv.roles}">
               <ul class="actors-list">
-                <c:forEach items="${movie.roles}" var="role">
+                <c:forEach items="${tv.roles}" var="role">
                     <c:set var="actor" value="${role.actor}"/>
                     <li>
                         <c:set var="image" value="${actor.profileImageUrl}"/>
@@ -149,12 +147,12 @@
                         }
                     }
                 </script>
-                <form method="post" action="<c:url value="/movies/${movie.id}" />">
+                <form method="post" action="<c:url value="/movies/${tv.id}" />">
                     <h4>Give
                     <c:forEach begin="1" end="5" var="i">
                     <a href="#" onClick="rate(${i});"><img src="/images/rating-active.png" id="rated_${i}"/></a>
                     </c:forEach>
-                    to &quot;${movie.title}&quot; saying:
+                    to &quot;${tv.title}&quot; saying:
                     <input type="hidden" value="${userRating.stars}" name="rated" id="rated"/>
                     <input type="text" size="100" name="comment" value="${userRating.comment}"/>
                     <input type="submit" value="Rate!"/>
@@ -166,9 +164,9 @@
                     rate(${userRating.stars});
                 </script>
             </c:if>
-            <c:if test="${not empty movie.ratings}">
+            <c:if test="${not empty tv.ratings}">
               <ul>
-                <c:forEach items="${movie.ratings}" var="rating">
+                <c:forEach items="${tv.ratings}" var="rating">
                     <c:if test="${rating != userRating}">
                     <li><img src="/images/rated_${rating.stars}.png" alt="${rating.stars} stars"/> by <a href="<c:url value="/user/${rating.user.login}" />">${rating.user.name}</a> who says: &quot;${rating.comment}&quot;</li>
                     </c:if>
@@ -180,8 +178,8 @@
       </div>
     </c:when>
     <c:otherwise>
-        <h2>No movie found</h2>
-        <p>The movie you were looking for could not be found.</p>
+        <h2>No TV show found</h2>
+        <p>The TV show you were looking for could not be found.</p>
     </c:otherwise>
 </c:choose>
 </body></html>

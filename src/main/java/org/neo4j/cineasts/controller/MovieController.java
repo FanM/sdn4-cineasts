@@ -10,19 +10,11 @@
  */
 package org.neo4j.cineasts.controller;
 
-import java.util.Collection;
 import java.util.Collections;
 
-import org.neo4j.cineasts.domain.Actor;
-import org.neo4j.cineasts.domain.Movie;
-import org.neo4j.cineasts.domain.Rating;
-import org.neo4j.cineasts.domain.User;
-import org.neo4j.cineasts.repository.ActorRepository;
+import org.neo4j.cineasts.domain.*;
 import org.neo4j.cineasts.repository.MovieRepository;
-import org.neo4j.cineasts.repository.UserRepository;
-import org.neo4j.cineasts.service.DatabasePopulator;
 import org.neo4j.ogm.cypher.Filter;
-import org.neo4j.ogm.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,21 +32,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
  * @since 04.03.11
  */
 @Controller
-public class MovieController {
+public class MovieController extends BaseController {
 
     private static final Logger log = LoggerFactory.getLogger(MovieController.class);
+
     @Autowired
     private MovieRepository movieRepository;
-    @Autowired
-    private ActorRepository actorRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private DatabasePopulator populator;
-    @Autowired
-    private Session session;
-
-
 
     @RequestMapping(value = "/movies/{id}", method = RequestMethod.GET, headers = "Accept=application/json")
     public
@@ -76,7 +59,7 @@ public class MovieController {
             Rating rating = null;
             if (user != null) {
                 for (Rating r : user.getRatings()) {
-                    if (r.getMovie().equals(movie)) {
+                    if (r.getItem().equals(movie)) {
                         rating = r;
                         break;
                     }
@@ -84,7 +67,7 @@ public class MovieController {
             }
             if (rating == null) {
                 rating = new Rating();
-                rating.setMovie(movie);
+                rating.setItem(movie);
                 rating.setUser(user);
                 rating.setStars(stars);
             }
@@ -106,11 +89,7 @@ public class MovieController {
         return singleMovieView(model, movieId);
     }
 
-    private User addUser(Model model) {
-        User user = userRepository.getUserFromSession();
-        model.addAttribute("user", user);
-        return user;
-    }
+
 
     @RequestMapping(value = "/movies", method = RequestMethod.GET, headers = "Accept=text/html")
     public String findMovies(Model model, @RequestParam("q") String query) {
@@ -126,41 +105,7 @@ public class MovieController {
         return "/movies/list";
     }
 
-    @RequestMapping(value = "/actors/{id}", method = RequestMethod.GET, headers = "Accept=text/html")
-    public String singleActorView(Model model, @PathVariable String id) {
-        Actor actor = IterableUtils.getFirstOrNull(findActorByProperty("id", id));
-        model.addAttribute("actor", actor);
-        model.addAttribute("id", id);
-        model.addAttribute("roles", actor.getRoles());
-        addUser(model);
-        return "/actors/show";
-    }
-
-    @RequestMapping(value = "/admin/populate", method = RequestMethod.GET)
-    public String populateDatabase(Model model) {
-        Collection<Movie> movies = populator.populateDatabase();
-        model.addAttribute("movies", movies);
-        addUser(model);
-        return "/movies/list";
-    }
-
-    @RequestMapping(value = "/admin/clean", method = RequestMethod.GET)
-    public String clean(Model model) {
-        populator.cleanDb();
-        return "movies/list";
-    }
-
-    @RequestMapping(value = "/", method = RequestMethod.GET)
-    public String index(Model model) {
-        addUser(model);
-        return "index";
-    }
-
     public Iterable<Movie> findMovieByProperty(String propertyName, Object propertyValue) {
         return session.loadAll(Movie.class, new Filter(propertyName, propertyValue));
-    }
-
-    public Iterable<Actor> findActorByProperty(String propertyName, Object propertyValue) {
-        return session.loadAll(Actor.class, new Filter(propertyName, propertyValue));
     }
 }

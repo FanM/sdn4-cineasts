@@ -38,7 +38,7 @@ public class ImportController {
         this.importService = importService;
     }
 
-    @RequestMapping(value = "/import/{ids}", method = RequestMethod.GET)
+    @RequestMapping(value = "/import/movie/{ids}", method = RequestMethod.GET)
     public String importMovie(@PathVariable String ids, Model model) {
         long start = System.currentTimeMillis();
         final Map<Integer, String> movies = importService.importMovies(extractRanges(ids));
@@ -49,6 +49,16 @@ public class ImportController {
         return "import/result";
     }
 
+    @RequestMapping(value = "/import/tv/{ids}", method = RequestMethod.GET)
+    public String importTV(@PathVariable String ids, Model model) {
+        long start = System.currentTimeMillis();
+        final Map<Integer, String> tvs = importService.importTVs(extractRanges(ids));
+        long duration = (System.currentTimeMillis() - start) / 1000;
+        model.addAttribute("duration", duration);
+        model.addAttribute("ids", ids);
+        model.addAttribute("movies", tvs.entrySet());
+        return "import/result";
+    }
 
     private Map<Integer, Integer> extractRanges(String ids) {
         Map<Integer, Integer> ranges = new LinkedHashMap<Integer, Integer>();

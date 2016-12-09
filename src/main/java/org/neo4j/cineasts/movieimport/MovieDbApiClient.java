@@ -31,6 +31,10 @@ public class MovieDbApiClient {
         return loadJsonData(buildMovieUrl(id));
     }
 
+    public Map getTV(String id) {
+        return loadJsonData(buildTVUrl(id));
+    }
+
     private Map loadJsonData(String url) {
         try {
             Map value = mapper.readValue(new URL(url), Map.class);
@@ -45,6 +49,10 @@ public class MovieDbApiClient {
 
     private String buildMovieUrl(String movieId) {
         return String.format("%s/movie/%s?append_to_response=credits&api_key=%s", baseUrl, movieId, apiKey);
+    }
+
+    private String buildTVUrl(String tvId) {
+        return String.format("%s/tv/%s?append_to_response=credits&api_key=%s", baseUrl, tvId, apiKey);
     }
 
     public Map getPerson(String id) {

@@ -11,9 +11,12 @@
 package org.neo4j.cineasts.controller;
 
 
+import org.neo4j.cineasts.domain.Item;
 import org.neo4j.cineasts.domain.User;
 import org.neo4j.cineasts.repository.MovieRepository;
 import org.neo4j.cineasts.repository.UserRepository;
+import org.neo4j.cineasts.service.DatabasePopulator;
+import org.neo4j.driver.v1.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +26,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import java.util.Collection;
+
 /**
  * Handles and retrieves the login or denied page depending on the URI template
  */
 @Controller
-public class UserController {
+public class UserController extends BaseController {
 
     @Autowired
-    UserRepository userRepository;
-    @Autowired
     MovieRepository movieRepository;
+    @Autowired
+    DatabasePopulator populator;
 
     private final static Logger logger = LoggerFactory.getLogger(UserController.class);
 
@@ -58,6 +63,20 @@ public class UserController {
         User user = userRepository.getUserFromSession();
 
         return publicProfile(model, profiled, user);
+    }
+
+    @RequestMapping(value = "/admin/populate", method = RequestMethod.GET)
+    public String populateDatabase(Model model) {
+        Collection<Item> movies = populator.populateDatabase();
+        model.addAttribute("movies", movies);
+        addUser(model);
+        return "/movies/list";
+    }
+
+    @RequestMapping(value = "/admin/clean", method = RequestMethod.GET)
+    public String clean(Model model) {
+        populator.cleanDb();
+        return "movies/list";
     }
 
     private String publicProfile(Model model, User profiled, User user) {

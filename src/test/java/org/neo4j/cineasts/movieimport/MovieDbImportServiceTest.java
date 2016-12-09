@@ -9,8 +9,11 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.neo4j.cineasts.PersistenceContext;
+import org.neo4j.cineasts.domain.Item;
 import org.neo4j.cineasts.domain.Movie;
+import org.neo4j.cineasts.domain.TV;
 import org.neo4j.cineasts.repository.MovieRepository;
+import org.neo4j.cineasts.repository.TVRepository;
 import org.neo4j.ogm.cypher.Filter;
 import org.neo4j.ogm.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,34 +32,51 @@ public class MovieDbImportServiceTest {
 
 	@Autowired
 	MovieDbImportService importService;
+    @Autowired
+    MovieRepository movieRepository;
 	@Autowired
-	MovieRepository movieRepository;
+    TVRepository tvRepository;
 
 	@Autowired
 	Session session;
 
 	@Test
 	public void testImportMovie() throws Exception {
-		Movie movie = importService.importMovie("2");
+		Item movie = importService.importMovie("2");
 		assertEquals("movie-id", "2", movie.getId());
 		assertEquals("movie-title", "Ariel", movie.getTitle());
 	}
 
 	@Test
+	public void testImportTV() throws Exception {
+		Item tv = importService.importTV("1");
+		assertEquals("tv-id", "1", tv.getId());
+		assertEquals("tv-title", "Pride", tv.getTitle());
+	}
+
+	@Test
 	@Ignore
 	public void testImportMovieWithSamePersonAsActorAndDirector() throws Exception {
-		Movie movie = importService.importMovie("200");
+		Item movie = importService.importMovie("200");
 		assertEquals("movie-id", "200", movie.getId());
 		assertEquals("movie-title", "Star Trek: Insurrection", movie.getTitle());
 	}
 
 	@Test
 	public void testImportMovieTwice() throws Exception {
-		Movie movie = importService.importMovie("603");
+		Item movie = importService.importMovie("603");
 		importService.importMovie("603");
 		final Movie foundMovie = movieRepository.findById("603");
 		assertEquals("movie-id", movie, foundMovie);
 	}
+
+    @Test
+    public void testImportTVTwice() throws Exception {
+        Item tv = importService.importTV("603");
+        importService.importTV("603");
+        final TV foundTV = tvRepository.findById("603");
+        assertEquals("tv-id", tv, foundTV);
+    }
 
 	/*@Test
 	public void testImportPerson() throws Exception {

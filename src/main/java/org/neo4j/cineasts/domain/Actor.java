@@ -23,7 +23,7 @@ import org.neo4j.ogm.annotation.Relationship;
 public class Actor extends Person {
 
     @Relationship(type = "ACTS_IN", direction = Relationship.OUTGOING)
-    Set<Role> roles = new HashSet<Role>();
+    Set<Role> roles = new HashSet<>();
 
     public Actor() {
     }
@@ -40,7 +40,7 @@ public class Actor extends Person {
         return roles;
     }
 
-    public Role playedIn(Movie movie, String roleName) {
+    public Role playedIn(Item movie, String roleName) {
         final Role role = new Role(this, movie, roleName);
         roles.add(role);
         movie.addRole(role);
