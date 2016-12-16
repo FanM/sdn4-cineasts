@@ -60,7 +60,7 @@ public class MovieDbApiClient {
     }
 
     private String buildPersonUrl(String personId) {
-        return String.format("%s/person/%s?api_key=%s", baseUrl, personId, apiKey);
+        return String.format("%s/person/%s?append_to_response=images&api_key=%s", baseUrl, personId, apiKey);
     }
 
     public Map getImageConfig() {

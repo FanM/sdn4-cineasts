@@ -11,9 +11,7 @@
 package org.neo4j.cineasts.movieimport;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.neo4j.cineasts.domain.Movie;
 import org.neo4j.cineasts.domain.Person;
@@ -68,6 +66,19 @@ public class MovieDbJsonMapper {
         return (String) inner.get(0).get(property);
     }
 
+    private static List<String> extractFirstNImages(Map data, String field, String property, int n, String baseImageUrl) {
+        List<Map> inner = (List<Map>) data.get(field);
+        if (inner == null || inner.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> result = new ArrayList<>();
+        for (int i = 0; i < n && i < inner.size(); i++) {
+            result.add(baseImageUrl + inner.get(i).get(property));
+        }
+        return result;
+    }
+
+
     private static Date toDate(Map data, String field, final String pattern) {
         try {
             String dateString = (String) data.get(field);
@@ -90,7 +101,11 @@ public class MovieDbJsonMapper {
             person.setBiography(limit(biography, 500));
             person.setVersion((Integer) data.get("version"));
             if(data.get("profile_path")!=null) {
-                person.setProfileImageUrl(baseImageUrl + (String) data.get("profile_path"));
+                person.setProfileImageUrl(baseImageUrl + data.get("profile_path"));
+            }
+            Map images = (Map) data.get("images");
+            if(images != null) {
+                person.setImageUrls(extractFirstNImages(images, "profiles", "file_path", 3, baseImageUrl));
             }
         } catch (Exception e) {
             throw new MovieDbException("Failed to map json for person", e);

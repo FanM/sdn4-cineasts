@@ -12,6 +12,7 @@ package org.neo4j.cineasts.domain;
 
 
 import java.util.Date;
+import java.util.List;
 
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
@@ -32,6 +33,7 @@ public class Person {
     private String biography;
     private Integer version;
     private String profileImageUrl;
+    private List<String> imageUrls;
 
     public Person(String id, String name) {
         this.id = id;
@@ -100,6 +102,14 @@ public class Person {
 
     public void setProfileImageUrl(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public List<String> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 
     @Override

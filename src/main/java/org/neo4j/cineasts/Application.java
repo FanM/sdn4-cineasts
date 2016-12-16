@@ -41,6 +41,6 @@ public class Application extends Neo4jConfiguration {
 
     @Bean
     public MovieDbApiClient getMovieDbApiClient() {
-        return new MovieDbApiClient("926d2a79e82920b62f03b1cb57e532e6");
+        return new MovieDbApiClient("030d0ec20f55d94c176c8fe6b861839e");
     }
 }

@@ -56,13 +56,11 @@ public class MovieDbImportService {
         }
 	}
 
-    @Transactional
     public Map<Integer, String> importMovies(Map<Integer, Integer> ranges) {
         importImageConfig();
         return importItems(ranges, Movie.class);
     }
 
-	@Transactional
 	public Map<Integer, String> importTVs(Map<Integer, Integer> ranges) {
         importImageConfig();
         return importItems(ranges, TV.class);
@@ -79,6 +77,7 @@ public class MovieDbImportService {
         return items;
     }
 
+    @Transactional
 	private String importItemFailsafe(Integer id, Class clazz) {
 		try {
             Item item;
