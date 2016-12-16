@@ -66,14 +66,22 @@ public class MovieDbJsonMapper {
         return (String) inner.get(0).get(property);
     }
 
-    private static List<String> extractFirstNImages(Map data, String field, String property, int n, String baseImageUrl) {
+    private static List<String> extractFirstNImages(Map data, String field, String property,
+                                                    int n, String baseImageUrl, int imageHeight, int imageWidth) {
         List<Map> inner = (List<Map>) data.get(field);
         if (inner == null || inner.isEmpty()) {
             return Collections.emptyList();
         }
         List<String> result = new ArrayList<>();
-        for (int i = 0; i < n && i < inner.size(); i++) {
-            result.add(baseImageUrl + inner.get(i).get(property));
+        int count = 0;
+        for (int i = 0; i < inner.size(); i++) {
+            Map profile = inner.get(i);
+            if ((int)profile.get("height") >= imageHeight && (int)profile.get("width") >= imageWidth) {
+                result.add(baseImageUrl + inner.get(i).get(property));
+                count++;
+                if (count == n)
+                    return result;
+            }
         }
         return result;
     }
@@ -105,7 +113,8 @@ public class MovieDbJsonMapper {
             }
             Map images = (Map) data.get("images");
             if(images != null) {
-                person.setImageUrls(extractFirstNImages(images, "profiles", "file_path", 3, baseImageUrl));
+                person.setImageUrls(extractFirstNImages(images, "profiles", "file_path", 3,
+                        baseImageUrl, 500, 500));
             }
         } catch (Exception e) {
             throw new MovieDbException("Failed to map json for person", e);

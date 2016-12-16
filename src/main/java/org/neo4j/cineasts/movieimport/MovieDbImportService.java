@@ -52,7 +52,7 @@ public class MovieDbImportService {
 	public void importImageConfig() {
         if (baseImageUrl == null) {
             Map data = client.getImageConfig();
-            baseImageUrl = ((Map) data.get("images")).get("base_url") + "w185";
+            baseImageUrl = ((Map) data.get("images")).get("base_url") + "w500";
         }
 	}
 
